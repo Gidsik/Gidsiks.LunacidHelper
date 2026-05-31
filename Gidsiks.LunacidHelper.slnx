@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="LunacidHelper.Lib.Tests/LunacidHelper.Lib.Tests.csproj" Id="1789f83a-f688-4338-9759-acb95dd9573f" />
+  <Project Path="LunacidHelper.Lib/LunacidHelper.Lib.csproj" />
+  <Project Path="LunacidHelper.WASMApp/LunacidHelper.WASMApp.csproj" Id="7c71ebdc-6405-4481-8170-365eed9fb919" />
+</Solution>

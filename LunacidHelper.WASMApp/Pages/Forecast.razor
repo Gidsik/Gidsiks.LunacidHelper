@@ -1,0 +1,126 @@
+﻿@page "/forecast"
+@* @inject HttpClient Http *@
+
+<PageTitle>Lunacy Forecast</PageTitle>
+
+<h1>Lunacy Impact Forecast</h1>
+
+<div class="card mb-3">
+	<div class="card-header">Forecast Range</div>
+	<div class="card-body">
+		<div class="row g-3 align-items-end">
+			<div class="col-sm-4">
+				<label for="dateFrom" class="form-label">From</label>
+				<input type="date" class="form-control" id="dateFrom"
+					   value="@dateFrom.ToString("yyyy-MM-dd")"
+					   @onchange="OnDateFromChanged" />
+			</div>
+			<div class="col-sm-4">
+				<label for="dateTo" class="form-label">To</label>
+				<input type="date" class="form-control" id="dateTo"
+					   min="@dateFrom.ToString("yyyy-MM-dd")"
+					   max="@dateFrom.AddDays(31).ToString("yyyy-MM-dd")"
+					   value="@dateTo.ToString("yyyy-MM-dd")"
+					   @onchange="OnDateToChanged" />
+			</div>
+			<div class="col-sm-4 d-flex align-items-end pb-1">
+				<span class="text-muted">@((dateTo - dateFrom).Days + 1) day(s) selected</span>
+			</div>
+		</div>
+	</div>
+</div>
+
+@if (forecasts == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<table class="table table-sm table-striped">
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th>Moon</th>
+				<th aria-label="Lunacy Gain Multiplier">Lunacy Gain Multiplier</th>
+				<th aria-label="Max XP Multiplier (if lunacy 100%)">Max XP Multiplier</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var forecast in forecasts)
+			{
+				<tr>
+					<td>@forecast.Date.ToShortDateString()</td>
+					<td>
+						<span style="font-size:1.4rem;line-height:1">@GetMoonEmoji(forecast.Date)</span>
+					</td>
+					<td>@forecast.LunacyGainMultiplier.ToString("F2")x</td>
+					<td>@forecast.MaxXPMultiplier.ToString("F2")x</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	private DateTime dateFrom = DateTime.Today;
+	private DateTime dateTo = DateTime.Today.AddDays(31);
+
+	private LunacyImpactForecast[]? forecasts;
+
+	protected override void OnInitialized() => RebuildForecasts();
+
+	private void OnDateFromChanged(ChangeEventArgs e)
+	{
+		if (!DateTime.TryParse(e.Value?.ToString(), out var parsed)) return;
+
+		dateFrom = parsed;
+		if ((dateTo - dateFrom).Days < 31) dateTo = dateFrom.AddDays(31);
+		// if ((dateTo - dateFrom).Days > 31) dateTo = dateFrom.AddDays(31);
+		RebuildForecasts();
+
+	}
+
+	private void OnDateToChanged(ChangeEventArgs e)
+	{
+		if (!DateTime.TryParse(e.Value?.ToString(), out var parsed)) return;
+
+		if (parsed < dateFrom) dateTo = dateFrom.AddDays(31);
+		// dateTo = parsed > dateFrom.AddDays(31) ? dateFrom.AddDays(31) : parsed;
+		RebuildForecasts();
+	}
+
+	private void RebuildForecasts()
+	{
+		int days = (dateTo - dateFrom).Days + 1;
+		forecasts = Enumerable.Range(0, days)
+			.Select(i => new LunacyImpactForecast(dateFrom.AddDays(i)))
+			.ToArray();
+	}
+
+	private static string GetMoonEmoji(DateTime date) => Lib.MoonHelper.GetMoonPhaseByDate(DateOnly.FromDateTime(date)) switch
+	{
+		Lib.MoonPhases.NewMoon => "🌑",
+		Lib.MoonPhases.Growing1 => "🌒",
+		Lib.MoonPhases.Growing2 => "🌓",
+		Lib.MoonPhases.Growing3 => "🌔",
+		Lib.MoonPhases.FullMoon => "🌕",
+		Lib.MoonPhases.Aging1 => "🌖",
+		Lib.MoonPhases.Aging2 => "🌗",
+		Lib.MoonPhases.Aging3 => "🌘",
+		_ => "🌘"
+	};
+
+	public class LunacyImpactForecast
+	{
+		public DateTime Date { get; set; }
+		public float LunacyGainMultiplier { get; set; }
+		public float MaxXPMultiplier { get; set; }
+
+		public LunacyImpactForecast(DateTime date)
+		{
+			Date = date;
+			LunacyGainMultiplier = Lib.MoonHelper.GetMoonMultByDate(DateOnly.FromDateTime(date));
+			MaxXPMultiplier = Lib.XpHelper.GetXPMultByDate(100, DateOnly.FromDateTime(date));
+		}
+	}
+}

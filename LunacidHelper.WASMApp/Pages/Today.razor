@@ -1,0 +1,71 @@
+﻿@page "/"
+
+<PageTitle>Lunacy Today</PageTitle>
+
+<h1>How Lunacy Affects You Today</h1>
+
+<div class="card mb-3">
+	<div class="card-header">Character Stats</div>
+	<div class="card-body">
+		<div class="row g-3 align-items-end">
+			@* <div class="col-sm-3">
+				<label for="currentLevel" class="form-label">Level</label>
+				<input type="number" class="form-control" id="currentLevel" min="0" @bind="currentLevel" />
+			</div>
+			<div class="col-sm-3">
+				<label for="currentXpPercent" class="form-label">XP Above Level (%)</label>
+				<input type="number" class="form-control" id="currentXpPercent" min="0" @bind="currentXpPercent" />
+			</div> *@
+			<div class="col-sm-3">
+				<label for="currentMaxMp" class="form-label">Max MP</label>
+				<input type="number" class="form-control" id="currentMaxMp" min="0" @bind="currentMaxMp" />
+			</div>
+			<div class="col-sm-3">
+				<label for="currentLunacy" class="form-label">Lunacy: <strong>@currentLunacy</strong></label>
+				<input type="range" class="form-range" id="currentLunacy" min="0" max="100" @bind="currentLunacy" />
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="card mb-3">
+	<div class="card-header">XP Multiplier Based on Lunacy</div>
+	<div class="card-body">
+		<p class="mb-0">Current XP multiplier: <strong>@xpMult.ToString("F2")x</strong></p>
+	</div>
+</div>
+
+<div class="card mb-3">
+	<div class="card-header">Spell Dmg Multiplier Based on Lunacy</div>
+	<div class="card-body">
+		<p class="mb-0">Current Spell Dmg multiplier: <strong>@xpMult.ToString("F2")x</strong></p>
+	</div>
+</div>
+
+<div class="card mb-3">
+	<div class="card-header">Lunacy Gained from Casting a Spell</div>
+	<div class="card-body">
+		<div class="row g-3 align-items-end">
+			<div class="col-sm-4">
+				<label for="spellCost" class="form-label">Spell Cost (MP)</label>
+				<input type="number" class="form-control" id="spellCost" min="0" @bind="spellCost" />
+			</div>
+			<div class="col-sm-4 d-flex align-items-end pb-1">
+				<p class="mb-0">Lunacy gained: <strong>@lunacyGain.ToString("F2")%</strong></p>
+			</div>
+		</div>
+	</div>
+</div>
+
+@code {
+	private int currentLevel = 1;
+	private int currentXpPercent = 0;
+	private int currentMaxMp = 10;
+	private int currentLunacy = 0;
+
+	private int spellCost = 10;
+	private float lunacyGain => Lib.LunacyHelper.GetLunacyGainBySpellCastNow(spellCost, currentMaxMp);
+	private float spellDmgMult => Lib.LunacyHelper.GetSpellDmgMultBasedOnLunacy(currentLunacy);
+
+	private float xpMult => Lib.XpHelper.GetXPMultNow(currentLunacy);
+}
