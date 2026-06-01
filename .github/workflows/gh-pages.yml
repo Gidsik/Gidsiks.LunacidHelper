@@ -1,0 +1,38 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Publish
+        run: dotnet publish LunacidHelper.WASMApp/LunacidHelper.WASMApp.csproj -c Release -o publish
+
+      - name: Fix base href & add 404.html
+        run: |
+          # Add .nojekyll so GitHub Pages serves files starting with underscores (_framework, etc.)
+          touch publish/wwwroot/.nojekyll
+          # Fix base href in service-worker.js to match the repository name
+          sed -i 's|const base = "/";|const base = "/Gidsiks.LunacidHelper/";|' publish/wwwroot/service-worker.js
+          sed -i 's|    <base href="/" />|    <base href="/Gidsiks.LunacidHelper/" />|' publish/wwwroot/index.html
+          # Copy index.html as 404.html for SPA routing
+          cp publish/wwwroot/index.html publish/wwwroot/404.html
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: publish/wwwroot
